@@ -3,6 +3,40 @@
 
   function GameComponent() {
     const [showDialog, setShowDialog] = useState(false);
+    const [dialogText, setDialogText] = useState('');
+    const hasFetched = React.useRef(false);
+
+    const API_KEY = 'AIzaSyCpgL2OaqMCIfPQF0xxRyNZQ20pWiWQuQ4';
+
+    async function fetchGeminiResponse() {
+      if (hasFetched.current) return;
+      hasFetched.current = true;
+      setDialogText('Loading...');
+      setShowDialog(true);
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                { parts: [{ text: 'Say hello to the player in a friendly way.' }] },
+              ],
+            }),
+          }
+        );
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error?.message || 'Request failed');
+        }
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
+        setDialogText(text);
+      } catch (e) {
+        setDialogText('Error fetching response');
+        console.error(e);
+      }
+    }
 
     useEffect(() => {
       class DemoScene extends Phaser.Scene {
@@ -11,7 +45,7 @@
         }
         preload() {
           this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-dude.png');
-          this.load.image('npc', 'https://labs.phaser.io/assets/sprites/baddie.png');
+          this.load.image('npc', 'https://labs.phaser.io/assets/sprites/chick.png');
         }
         create() {
           this.player = this.physics.add.sprite(50, 100, 'player');
@@ -19,9 +53,16 @@
 
           this.cursors = this.input.keyboard.createCursorKeys();
 
-          this.physics.add.overlap(this.player, this.npc, () => {
-            setShowDialog(true);
-          }, null, this);
+          this.collider = this.physics.add.overlap(
+            this.player,
+            this.npc,
+            () => {
+              this.collider.destroy();
+              fetchGeminiResponse();
+            },
+            null,
+            this
+          );
         }
         update() {
           const speed = 150;
@@ -61,7 +102,7 @@
     return (
       React.createElement(React.Fragment, null,
         React.createElement('div', { id: 'gameContainer' }),
-        showDialog && React.createElement('div', { className: 'dialog' }, 'Hello NPC!')
+        showDialog && React.createElement('div', { className: 'dialog' }, dialogText)
       )
     );
   }
