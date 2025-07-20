@@ -3,6 +3,34 @@
 
   function GameComponent() {
     const [showDialog, setShowDialog] = useState(false);
+    const [dialogText, setDialogText] = useState('');
+
+    const API_KEY = 'AIzaSyCpgL2OaqMCIfPQF0xxRyNZQ20pWiWQuQ4';
+
+    async function fetchGeminiResponse() {
+      setDialogText('Loading...');
+      setShowDialog(true);
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                { parts: [{ text: 'Say hello to the player in a friendly way.' }] },
+              ],
+            }),
+          }
+        );
+        const data = await response.json();
+        const text =
+          data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
+        setDialogText(text);
+      } catch (e) {
+        setDialogText('Error fetching response');
+      }
+    }
 
     useEffect(() => {
       class DemoScene extends Phaser.Scene {
@@ -19,9 +47,15 @@
 
           this.cursors = this.input.keyboard.createCursorKeys();
 
-          this.physics.add.overlap(this.player, this.npc, () => {
-            setShowDialog(true);
-          }, null, this);
+          this.physics.add.overlap(
+            this.player,
+            this.npc,
+            () => {
+              fetchGeminiResponse();
+            },
+            null,
+            this
+          );
         }
         update() {
           const speed = 150;
@@ -61,7 +95,7 @@
     return (
       React.createElement(React.Fragment, null,
         React.createElement('div', { id: 'gameContainer' }),
-        showDialog && React.createElement('div', { className: 'dialog' }, 'Hello NPC!')
+        showDialog && React.createElement('div', { className: 'dialog' }, dialogText)
       )
     );
   }
