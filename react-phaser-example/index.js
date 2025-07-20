@@ -4,10 +4,13 @@
   function GameComponent() {
     const [showDialog, setShowDialog] = useState(false);
     const [dialogText, setDialogText] = useState('');
+    const hasFetched = React.useRef(false);
 
     const API_KEY = 'AIzaSyCpgL2OaqMCIfPQF0xxRyNZQ20pWiWQuQ4';
 
     async function fetchGeminiResponse() {
+      if (hasFetched.current) return;
+      hasFetched.current = true;
       setDialogText('Loading...');
       setShowDialog(true);
       try {
@@ -47,10 +50,11 @@
 
           this.cursors = this.input.keyboard.createCursorKeys();
 
-          this.physics.add.overlap(
+          this.collider = this.physics.add.overlap(
             this.player,
             this.npc,
             () => {
+              this.collider.destroy();
               fetchGeminiResponse();
             },
             null,
