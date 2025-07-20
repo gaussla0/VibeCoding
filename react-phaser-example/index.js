@@ -27,14 +27,6 @@
           }
         );
         const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error?.message || 'Request failed');
-        }
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
-        setDialogText(text);
-      } catch (e) {
-        setDialogText('Error fetching response');
-        console.error(e);
       }
     }
 
