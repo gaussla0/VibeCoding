@@ -27,11 +27,6 @@
           }
         );
         const data = await response.json();
-        const text =
-          data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
-        setDialogText(text);
-      } catch (e) {
-        setDialogText('Error fetching response');
       }
     }
 
@@ -42,7 +37,7 @@
         }
         preload() {
           this.load.image('player', 'https://labs.phaser.io/assets/sprites/phaser-dude.png');
-          this.load.image('npc', 'https://labs.phaser.io/assets/sprites/baddie.png');
+          this.load.image('npc', 'https://labs.phaser.io/assets/sprites/chick.png');
         }
         create() {
           this.player = this.physics.add.sprite(50, 100, 'player');
